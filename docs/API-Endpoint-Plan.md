@@ -55,3 +55,4 @@
 | PUT | /api/results/{id} | Updates a participant's recorded result. | Organiser | FinishPosition, FinishTime | 200 OK - Result updated; 404 Not Found - Result does not exist; 403 Forbidden - Not authorised |
 | GET | /api/results/my | Returns the authenticated participant's personal results. | Participant | None | 200 OK - Personal results; 401 Unauthorized - Not authenticated; 403 Forbidden - Organiser attempted access |
 | GET | /api/events/{eventId}/results | Returns all results for an event. | Organiser | None | 200 OK - Event results; 404 Not Found - Event does not exist; 403 Forbidden - Not event organiser |
+| GET | /api/results/my/history | Returns the authenticated participant's complete race performance history. | Participant | None | 200 OK - Performance history; 401 Unauthorized - Not authenticated; 403 Forbidden - Organiser attempted access |
