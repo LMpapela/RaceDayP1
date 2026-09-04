@@ -76,6 +76,18 @@ namespace RaceDayP1.Controller
             return NoContent();
         }
         // End of UpdateResult method
+
+        // Beginning of GetPerformanceHistory method
+        [HttpGet("my/history")]
+        public async Task<ActionResult<IEnumerable<Result>>> GetPerformanceHistory()
+        {
+            var results = await _context.Results
+                .OrderByDescending(r => r.FinishPosition)
+                .ToListAsync();
+
+            return Ok(results);
+        }
+        // End of GetPerformanceHistory method
     }
     // End of ResultsController class
 }
