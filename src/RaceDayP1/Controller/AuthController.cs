@@ -42,6 +42,24 @@ namespace RaceDayP1.Controller
                 user);
         }
         // End of Register method
+
+        // Beginning of Login method
+        [HttpPost("login")]
+        public async Task<ActionResult<User>> Login(User user)
+        {
+            var existingUser = await _context.Users
+                .FirstOrDefaultAsync(u =>
+                    u.Email == user.Email &&
+                    u.Password == user.Password);
+
+            if (existingUser == null)
+            {
+                return Unauthorized("Invalid email or password.");
+            }
+
+            return Ok(existingUser);
+        }
+        // End of Login method
     }
     // End of AuthController class
 }
