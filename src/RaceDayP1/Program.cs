@@ -4,13 +4,24 @@ using RaceDayP1.Data;
 // Beginning of application setup
 var builder = WebApplication.CreateBuilder(args);
 
-// Register the RaceDay database context
-builder.Services.AddDbContext<RaceDayDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("RaceDayConnection")));
-
-// Add controller services
+// Register controller services
 builder.Services.AddControllers();
 
+// Register Swagger services
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// Register the RaceDay database context
+builder.Services.AddDbContext<RaceDayDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("RaceDayConnection")));
+
 var app = builder.Build();
+
+// Beginning of Swagger configuration
+app.UseSwagger();
+app.UseSwaggerUI();
+// End of Swagger configuration
 
 // Configure HTTPS redirection
 app.UseHttpsRedirection();
