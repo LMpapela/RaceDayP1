@@ -43,6 +43,8 @@ namespace RaceDayP1.Migrations
 
                     b.HasKey("CategoryID");
 
+                    b.HasIndex("EventID");
+
                     b.ToTable("Categories");
                 });
 
@@ -65,6 +67,12 @@ namespace RaceDayP1.Migrations
 
                     b.HasKey("EnrolmentID");
 
+                    b.HasIndex("CategoryID");
+
+                    b.HasIndex("EventID");
+
+                    b.HasIndex("UserID");
+
                     b.ToTable("Enrolments");
                 });
 
@@ -78,29 +86,37 @@ namespace RaceDayP1.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<decimal>("Distance")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
 
                     b.Property<DateTime>("EventDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("EventName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int>("EventTypeID")
                         .HasColumnType("int");
 
                     b.Property<string>("Location")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<int>("OrganiserID")
                         .HasColumnType("int");
 
                     b.HasKey("EventID");
+
+                    b.HasIndex("EventTypeID");
+
+                    b.HasIndex("OrganiserID");
 
                     b.ToTable("Events");
                 });
@@ -141,6 +157,8 @@ namespace RaceDayP1.Migrations
 
                     b.HasKey("ResultID");
 
+                    b.HasIndex("EnrolmentID");
+
                     b.ToTable("Results");
                 });
 
@@ -154,15 +172,18 @@ namespace RaceDayP1.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Password")
                         .IsRequired()
@@ -170,11 +191,66 @@ namespace RaceDayP1.Migrations
 
                     b.Property<string>("Role")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.HasKey("UserID");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("RaceDayP1.Models.Category", b =>
+                {
+                    b.HasOne("RaceDayP1.Models.Event", null)
+                        .WithMany()
+                        .HasForeignKey("EventID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("RaceDayP1.Models.Enrolment", b =>
+                {
+                    b.HasOne("RaceDayP1.Models.Category", null)
+                        .WithMany()
+                        .HasForeignKey("CategoryID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("RaceDayP1.Models.Event", null)
+                        .WithMany()
+                        .HasForeignKey("EventID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("RaceDayP1.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("RaceDayP1.Models.Event", b =>
+                {
+                    b.HasOne("RaceDayP1.Models.EventType", null)
+                        .WithMany()
+                        .HasForeignKey("EventTypeID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("RaceDayP1.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("OrganiserID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("RaceDayP1.Models.Result", b =>
+                {
+                    b.HasOne("RaceDayP1.Models.Enrolment", null)
+                        .WithMany()
+                        .HasForeignKey("EnrolmentID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }
