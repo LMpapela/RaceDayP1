@@ -1,58 +1,211 @@
 # RaceDay API Endpoint Plan
 
-## 1. Authentication
+## 1. Overview
 
-| HTTP Method | Route | Description | Role Required | Request Body | Expected Response |
-|---|---|---|---|---|---|
-| POST | /api/auth/register | Registers a new user as either an Organiser or Participant. | None (Public) | FirstName, LastName, Email, Password, Role | 201 Created - User registered; 400 Bad Request - Invalid data; 409 Conflict - Email already exists |
-| POST | /api/auth/login | Authenticates a registered user and establishes their authenticated session. | None (Public) | Email, Password | 200 OK - Login successful; 401 Unauthorized - Invalid credentials |
+The RaceDay API provides secure RESTful endpoints for managing users, events, event types, categories, participant enrolments and race results.
 
-## 2. User Profile
+The API uses JWT authentication and role-based authorization to protect resources.
 
-| HTTP Method | Route | Description | Role Required | Request Body | Expected Response |
-|---|---|---|---|---|---|
-| GET | /api/users/profile | Returns the profile of the currently authenticated user. | Any logged-in user | None | 200 OK - User profile; 401 Unauthorized - Not authenticated |
-| PUT | /api/users/profile | Updates the profile information of the currently authenticated user. | Any logged-in user | FirstName, LastName, Email | 200 OK - Updated profile; 400 Bad Request - Invalid data; 401 Unauthorized - Not authenticated |
+### Roles
 
-## 3. Events
+* **Participant** — Can browse events, manage their own enrolments and view their own performance information.
+* **Organiser** — Can create and manage events, categories and race results, and manage users.
 
-| HTTP Method | Route | Description | Role Required | Request Body | Expected Response |
-|---|---|---|---|---|---|
-| GET | /api/events | Returns a list of upcoming RaceDay events. | None (Public) | None | 200 OK - List of events |
-| GET | /api/events/{id} | Returns details for a specific event. | None (Public) | None | 200 OK - Event details; 404 Not Found - Event does not exist |
-| POST | /api/events | Creates a new event owned by the authenticated organiser. | Organiser | EventName, Description, EventDate, Location, Distance, EventTypeID | 201 Created - Event created; 400 Bad Request - Invalid data; 401 Unauthorized - Not authenticated; 403 Forbidden - Participant attempted access |
-| PUT | /api/events/{id} | Updates an existing event belonging to the authenticated organiser. | Organiser | EventName, Description, EventDate, Location, Distance, EventTypeID | 200 OK - Event updated; 404 Not Found - Event does not exist; 403 Forbidden - Not owner |
-| DELETE | /api/events/{id} | Deletes an event belonging to the authenticated organiser. | Organiser | None | 204 No Content - Event deleted; 404 Not Found - Event does not exist; 403 Forbidden - Not owner |
+---
 
-## 4. Event Types
+## 2. Authentication Endpoints
 
-| HTTP Method | Route | Description | Role Required | Request Body | Expected Response |
-|---|---|---|---|---|---|
-| GET | /api/eventtypes | Returns all available event types such as Run, Walk, and Cycle. | None (Public) | None | 200 OK - List of event types |
+| Method | Endpoint             | Access | Purpose                                     |
+| ------ | -------------------- | ------ | ------------------------------------------- |
+| POST   | `/api/Auth/register` | Public | Register a new participant                  |
+| POST   | `/api/Auth/login`    | Public | Authenticate a user and receive a JWT token |
 
-## 5. Categories
+### Registration
 
-| HTTP Method | Route | Description | Role Required | Request Body | Expected Response |
-|---|---|---|---|---|---|
-| GET | /api/events/{eventId}/categories | Returns all categories available for a specific event. | None (Public) | None | 200 OK - List of categories; 404 Not Found - Event does not exist |
-| POST | /api/events/{eventId}/categories | Creates a category for an event. | Organiser | CategoryName, Description | 201 Created - Category created; 404 Not Found - Event does not exist; 403 Forbidden - Not event organiser |
-| PUT | /api/categories/{id} | Updates an existing event category. | Organiser | CategoryName, Description | 200 OK - Category updated; 404 Not Found - Category does not exist; 403 Forbidden - Not authorised |
-| DELETE | /api/categories/{id} | Deletes an event category. | Organiser | None | 204 No Content - Category deleted; 404 Not Found - Category does not exist; 403 Forbidden - Not authorised |
+`POST /api/Auth/register`
 
-## 6. Event Enrolments
+A new user is registered as a Participant. The password is securely hashed before being stored.
 
-| HTTP Method | Route | Description | Role Required | Request Body | Expected Response |
-|---|---|---|---|---|---|
-| POST | /api/enrolments | Enrols the authenticated participant into an event using a selected category. | Participant | EventID, CategoryID | 201 Created - Enrolment created; 400 Bad Request - Invalid data; 401 Unauthorized - Not authenticated; 403 Forbidden - Organiser attempted access; 409 Conflict - Already enrolled |
-| GET | /api/enrolments/my | Returns all event enrolments belonging to the authenticated participant. | Participant | None | 200 OK - Participant enrolments; 401 Unauthorized - Not authenticated; 403 Forbidden - Organiser attempted access |
-| GET | /api/events/{eventId}/enrolments | Returns all participants enrolled in an organiser's event. | Organiser | None | 200 OK - Event enrolments; 404 Not Found - Event does not exist; 403 Forbidden - Not event organiser |
+### Login
 
-## 7. Results
+`POST /api/Auth/login`
 
-| HTTP Method | Route | Description | Role Required | Request Body | Expected Response |
-|---|---|---|---|---|---|
-| POST | /api/results | Records a participant's finishing position and finish time after an event. | Organiser | EnrolmentID, FinishPosition, FinishTime | 201 Created - Result recorded; 400 Bad Request - Invalid data; 403 Forbidden - Not authorised |
-| PUT | /api/results/{id} | Updates a participant's recorded result. | Organiser | FinishPosition, FinishTime | 200 OK - Result updated; 404 Not Found - Result does not exist; 403 Forbidden - Not authorised |
-| GET | /api/results/my | Returns the authenticated participant's personal results. | Participant | None | 200 OK - Personal results; 401 Unauthorized - Not authenticated; 403 Forbidden - Organiser attempted access |
-| GET | /api/events/{eventId}/results | Returns all results for an event. | Organiser | None | 200 OK - Event results; 404 Not Found - Event does not exist; 403 Forbidden - Not event organiser |
-| GET | /api/results/my/history | Returns the authenticated participant's complete race performance history. | Participant | None | 200 OK - Performance history; 401 Unauthorized - Not authenticated; 403 Forbidden - Organiser attempted access |
+The user's credentials are validated and a JWT token is returned after successful authentication.
+
+---
+
+## 3. User Endpoints
+
+| Method | Endpoint          | Access                | Purpose                                |
+| ------ | ----------------- | --------------------- | -------------------------------------- |
+| GET    | `/api/Users`      | Organiser             | View all users                         |
+| GET    | `/api/Users/{id}` | Authenticated         | View a user's safe profile information |
+| POST   | `/api/Users`      | Organiser             | Create a user                          |
+| PUT    | `/api/Users/{id}` | Own user or Organiser | Update user profile                    |
+| DELETE | `/api/Users/{id}` | Organiser             | Delete a user                          |
+
+User responses do not expose stored passwords.
+
+Participants can only update their own profiles, while Organisers can update user profiles.
+
+---
+
+## 4. Event Endpoints
+
+| Method | Endpoint           | Access                    | Purpose               |
+| ------ | ------------------ | ------------------------- | --------------------- |
+| GET    | `/api/Events`      | Authenticated             | View all events       |
+| GET    | `/api/Events/{id}` | Authenticated             | View a specific event |
+| POST   | `/api/Events`      | Organiser                 | Create an event       |
+| PUT    | `/api/Events/{id}` | Organiser and event owner | Update an event       |
+| DELETE | `/api/Events/{id}` | Organiser and event owner | Delete an event       |
+
+When an event is created, the authenticated Organiser's user ID is automatically assigned as the event owner.
+
+---
+
+## 5. Event Type Endpoints
+
+| Method | Endpoint               | Access | Purpose                    |
+| ------ | ---------------------- | ------ | -------------------------- |
+| GET    | `/api/EventTypes`      | Public | View all event types       |
+| GET    | `/api/EventTypes/{id}` | Public | View a specific event type |
+
+Event types provide classifications such as Road Running.
+
+---
+
+## 6. Category Endpoints
+
+| Method | Endpoint               | Access                    | Purpose                  |
+| ------ | ---------------------- | ------------------------- | ------------------------ |
+| GET    | `/api/Categories`      | Authenticated             | View all categories      |
+| GET    | `/api/Categories/{id}` | Authenticated             | View a specific category |
+| POST   | `/api/Categories`      | Organiser and event owner | Create a category        |
+| PUT    | `/api/Categories/{id}` | Organiser and event owner | Update a category        |
+| DELETE | `/api/Categories/{id}` | Organiser and event owner | Delete a category        |
+
+Categories are associated with events.
+
+Organisers can only create, update or delete categories belonging to their own events.
+
+---
+
+## 7. Enrolment Endpoints
+
+| Method | Endpoint               | Access                | Purpose                                                            |
+| ------ | ---------------------- | --------------------- | ------------------------------------------------------------------ |
+| GET    | `/api/Enrolments`      | Authenticated         | Organisers view all enrolments; Participants view their own        |
+| GET    | `/api/Enrolments/{id}` | Authenticated         | Organisers can view any enrolment; Participants can view their own |
+| POST   | `/api/Enrolments`      | Participant           | Enter an event category                                            |
+| DELETE | `/api/Enrolments/{id}` | Participant and owner | Remove the participant's own enrolment                             |
+
+When an enrolment is created, the authenticated Participant's user ID is automatically assigned.
+
+The API validates that:
+
+* The user exists.
+* The event exists.
+* The category exists.
+* The category belongs to the selected event.
+* The participant does not already have the same enrolment.
+
+---
+
+## 8. Result Endpoints
+
+| Method | Endpoint                  | Access        | Purpose                                                         |
+| ------ | ------------------------- | ------------- | --------------------------------------------------------------- |
+| GET    | `/api/Results`            | Organiser     | View all results                                                |
+| GET    | `/api/Results/{id}`       | Authenticated | Organisers can view any result; Participants can view their own |
+| POST   | `/api/Results`            | Organiser     | Create a participant result                                     |
+| PUT    | `/api/Results/{id}`       | Organiser     | Update a result                                                 |
+| GET    | `/api/Results/my/history` | Participant   | View the authenticated participant's performance history        |
+
+The API validates that:
+
+* The enrolment exists.
+* An enrolment cannot have duplicate results.
+* Finish position must be greater than zero.
+* Finish time must be greater than zero.
+
+---
+
+## 9. Security Requirements
+
+The RaceDay API implements the following security controls:
+
+### JWT Authentication
+
+Authenticated API requests use JSON Web Tokens.
+
+### Role-Based Authorization
+
+The API distinguishes between Participant and Organiser roles.
+
+### Ownership Authorization
+
+Users can only modify resources they are authorized to manage.
+
+Examples include:
+
+* Organisers can only modify their own events.
+* Organisers can only manage categories belonging to their events.
+* Participants can only manage their own enrolments.
+* Participants can only access their own performance history.
+* Participants can only access their own result records.
+
+### Password Security
+
+Passwords are hashed using a salted PBKDF2-based password hashing service before being stored.
+
+### Password Exposure Prevention
+
+API responses do not return stored passwords.
+
+### Input Validation
+
+Request models use validation attributes such as:
+
+* Required fields
+* Maximum lengths
+* Email validation
+* Minimum password length
+* Numeric range validation
+
+Additional business-rule validation is performed within the service layer.
+
+---
+
+## 10. HTTP Status Codes
+
+The API uses appropriate HTTP status codes, including:
+
+* **200 OK** — Successful request
+* **201 Created** — Resource successfully created
+* **204 No Content** — Successful update or deletion
+* **400 Bad Request** — Invalid request or business-rule violation
+* **401 Unauthorized** — Authentication is missing or invalid
+* **403 Forbidden** — Authenticated user does not have permission
+* **404 Not Found** — Requested resource does not exist
+* **409 Conflict** — Resource conflicts with existing data
+
+---
+
+## 11. Part 1 API Scope
+
+The Part 1 implementation establishes the foundation for the RaceDay platform through:
+
+* RESTful API endpoints
+* Entity Framework Core database integration
+* SQL Server database
+* JWT authentication
+* Role-based authorization
+* Resource ownership checks
+* Password hashing
+* Input validation
+* Service-layer architecture
+* Swagger API documentation and testing
+* GitHub version control
+
+Future project parts can extend this foundation with additional functionality and client-side features.

@@ -3,6 +3,12 @@ ST10458277 PROG6212 Programming 2B  RaceDay Event Management System
 
 RaceDay is a full-stack web-based event management platform designed for the South African road running, walking and cycling community.
 
+Github link
+https://github.com/lmpapela/racedayp1.git
+
+screenshot
+![alt text](<Screenshot 2026-09-04 at 11.02.14 PM.png>)
+
 The system provides functionality for event organisers and participants.
 
 ### Event Organisers

@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using RaceDayP1.Data;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RaceDayP1.Models;
+using RaceDayP1.Services;
+using System.Security.Claims;
 
 // Beginning of Events controller namespace
 namespace RaceDayP1.Controller
@@ -9,32 +10,33 @@ namespace RaceDayP1.Controller
     // Beginning of EventsController class
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class EventsController : ControllerBase
     {
-        private readonly RaceDayDbContext _context;
+        private readonly EventService _eventService;
 
         // Beginning of EventsController constructor
-        public EventsController(RaceDayDbContext context)
+        public EventsController(EventService eventService)
         {
-            _context = context;
+            _eventService = eventService;
         }
         // End of EventsController constructor
 
-        // Beginning of GetEvents method
+        // Beginning of GetAllEvents method
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Event>>> GetEvents()
+        public async Task<ActionResult<IEnumerable<Event>>> GetAllEvents()
         {
-            var events = await _context.Events.ToListAsync();
+            var events = await _eventService.GetAllEvents();
 
             return Ok(events);
         }
-        // End of GetEvents method
+        // End of GetAllEvents method
 
         // Beginning of GetEvent method
         [HttpGet("{id}")]
         public async Task<ActionResult<Event>> GetEvent(int id)
         {
-            var eventItem = await _context.Events.FindAsync(id);
+            var eventItem = await _eventService.GetEventById(id);
 
             if (eventItem == null)
             {
@@ -46,51 +48,87 @@ namespace RaceDayP1.Controller
         // End of GetEvent method
 
         // Beginning of CreateEvent method
+        [Authorize(Roles = "Organiser")]
         [HttpPost]
         public async Task<ActionResult<Event>> CreateEvent(Event eventItem)
         {
-            _context.Events.Add(eventItem);
+            var userIdClaim = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
 
-            await _context.SaveChangesAsync();
+            if (!int.TryParse(userIdClaim, out int currentUserId))
+            {
+                return Unauthorized();
+            }
+
+            // Always assign the authenticated organiser as the owner
+            eventItem.OrganiserID = currentUserId;
+
+            var createdEvent =
+                await _eventService.CreateEvent(eventItem);
 
             return CreatedAtAction(
                 nameof(GetEvent),
-                new { id = eventItem.EventID },
-                eventItem);
+                new { id = createdEvent.EventID },
+                createdEvent);
         }
         // End of CreateEvent method
 
         // Beginning of UpdateEvent method
+        [Authorize(Roles = "Organiser")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateEvent(int id, Event eventItem)
+        public async Task<IActionResult> UpdateEvent(
+            int id,
+            Event eventItem)
         {
             if (id != eventItem.EventID)
             {
                 return BadRequest();
             }
 
-            _context.Entry(eventItem).State = EntityState.Modified;
+            var userIdClaim = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
 
-            await _context.SaveChangesAsync();
+            if (!int.TryParse(userIdClaim, out int currentUserId))
+            {
+                return Unauthorized();
+            }
+
+            var updated =
+                await _eventService.UpdateEvent(
+                    eventItem,
+                    currentUserId);
+
+            if (!updated)
+            {
+                return NotFound();
+            }
 
             return NoContent();
         }
         // End of UpdateEvent method
 
         // Beginning of DeleteEvent method
+        [Authorize(Roles = "Organiser")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEvent(int id)
         {
-            var eventItem = await _context.Events.FindAsync(id);
+            var userIdClaim = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
 
-            if (eventItem == null)
+            if (!int.TryParse(userIdClaim, out int currentUserId))
+            {
+                return Unauthorized();
+            }
+
+            var deleted =
+                await _eventService.DeleteEvent(
+                    id,
+                    currentUserId);
+
+            if (!deleted)
             {
                 return NotFound();
             }
-
-            _context.Events.Remove(eventItem);
-
-            await _context.SaveChangesAsync();
 
             return NoContent();
         }

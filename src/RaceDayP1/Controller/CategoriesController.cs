@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using RaceDayP1.Data;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RaceDayP1.Models;
+using RaceDayP1.Services;
+using System.Security.Claims;
 
 // Beginning of Categories controller namespace
 namespace RaceDayP1.Controller
@@ -9,14 +10,15 @@ namespace RaceDayP1.Controller
     // Beginning of CategoriesController class
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class CategoriesController : ControllerBase
     {
-        private readonly RaceDayDbContext _context;
+        private readonly CategoryService _categoryService;
 
         // Beginning of CategoriesController constructor
-        public CategoriesController(RaceDayDbContext context)
+        public CategoriesController(CategoryService categoryService)
         {
-            _context = context;
+            _categoryService = categoryService;
         }
         // End of CategoriesController constructor
 
@@ -24,7 +26,7 @@ namespace RaceDayP1.Controller
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Category>>> GetCategories()
         {
-            var categories = await _context.Categories.ToListAsync();
+            var categories = await _categoryService.GetAllCategories();
 
             return Ok(categories);
         }
@@ -34,7 +36,8 @@ namespace RaceDayP1.Controller
         [HttpGet("{id}")]
         public async Task<ActionResult<Category>> GetCategory(int id)
         {
-            var category = await _context.Categories.FindAsync(id);
+            var category =
+                await _categoryService.GetCategoryById(id);
 
             if (category == null)
             {
@@ -46,21 +49,35 @@ namespace RaceDayP1.Controller
         // End of GetCategory method
 
         // Beginning of CreateCategory method
+        [Authorize(Roles = "Organiser")]
         [HttpPost]
-        public async Task<ActionResult<Category>> CreateCategory(Category category)
+        public async Task<ActionResult<Category>> CreateCategory(
+            Category category)
         {
-            _context.Categories.Add(category);
+            var userIdClaim = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
 
-            await _context.SaveChangesAsync();
+            if (!int.TryParse(userIdClaim, out int currentUserId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _categoryService.CreateCategory(category,currentUserId);
+
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
 
             return CreatedAtAction(
                 nameof(GetCategory),
-                new { id = category.CategoryID },
-                category);
+                new { id = result.Category!.CategoryID },
+                result.Category);
         }
         // End of CreateCategory method
 
         // Beginning of UpdateCategory method
+        [Authorize(Roles = "Organiser")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCategory(int id, Category category)
         {
@@ -69,28 +86,48 @@ namespace RaceDayP1.Controller
                 return BadRequest();
             }
 
-            _context.Entry(category).State = EntityState.Modified;
+            var userIdClaim = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
 
-            await _context.SaveChangesAsync();
+            if (!int.TryParse(userIdClaim, out int currentUserId))
+            {
+                return Unauthorized();
+            }
+
+            var result =
+                await _categoryService.UpdateCategory(category, currentUserId);
+
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
 
             return NoContent();
         }
         // End of UpdateCategory method
 
         // Beginning of DeleteCategory method
+        [Authorize(Roles = "Organiser")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCategory(int id)
         {
-            var category = await _context.Categories.FindAsync(id);
+            var userIdClaim = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
 
-            if (category == null)
+            if (!int.TryParse(userIdClaim, out int currentUserId))
             {
-                return NotFound();
+                return Unauthorized();
             }
 
-            _context.Categories.Remove(category);
+            var result =
+                await _categoryService.DeleteCategory(
+                    id,
+                    currentUserId);
 
-            await _context.SaveChangesAsync();
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
 
             return NoContent();
         }

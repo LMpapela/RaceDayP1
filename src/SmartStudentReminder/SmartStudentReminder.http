@@ -1,0 +1,6 @@
+@SmartStudentReminder_HostAddress = http://localhost:5246
+
+GET {{SmartStudentReminder_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
