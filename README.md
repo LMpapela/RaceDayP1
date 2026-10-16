@@ -1,84 +1,114 @@
-﻿# RaceDayP1
-ST10458277 PROG6212 Programming 2B  RaceDay Event Management System
+﻿# RaceDayP3 — Event Management Web Application
 
-RaceDay is a full-stack web-based event management platform designed for the South African road running, walking and cycling community.
+## Overview
 
-Github link
-https://github.com/lmpapela/racedayp1.git
+RaceDay is a web-based event management platform designed for South Africa’s running, walking, and cycling community.
 
-screenshot
-![alt text](<Screenshot 2026-09-04 at 11.02.14 PM.png>)
+Part 3 implements the MVC web application that consumes the RaceDay REST API developed in Part 2. It provides a user interface for account access and event discovery while keeping API communication separate from the presentation layer.
 
-The system provides functionality for event organisers and participants.
+## Features
 
-### Event Organisers
+- Responsive home page and navigation.
+- Participant registration and login interfaces.
+- Cookie-based authentication for the MVC application.
+- JWT bearer authentication for protected API requests.
+- Session-based storage of the API token.
+- Event discovery using data retrieved from the API.
+- Event details pages.
+- Light and dark appearance options.
+- Basic validation and API error handling.
 
-Event organisers will be able to:
+*Only features implemented and verified in the submitted code should be described as complete.*
 
-- Create and manage events
-- Manage event categories
-- Manage participant entries
-- Record and manage participant results
-- View event-related information
+## Technology Stack
 
-### Participants
+| Component | Technology |
+|---|---|
+| Language | C# |
+| Framework | ASP.NET Core MVC |
+| User interface | Razor Views, HTML, CSS, JavaScript |
+| Styling | Bootstrap and custom CSS |
+| API communication | `HttpClient` |
+| Authentication | Cookies and JWT bearer tokens |
+| Session management | ASP.NET Core Session |
+| Backend integration | RaceDay REST API |
 
-Participants will be able to:
+## YouTube Demonstration
+https://youtu.be/-p1CWiCNPrI?si=QsXkHMoUFSDukOhP
 
-- Browse available events
-- View event details
-- Enter events
-- View their event entries
-- Track their race results
-- View their personal performance history
+## Architecture
 
-## Project Objectives
+RaceDayP3 follows the Model-View-Controller (MVC) pattern.
 
-The main objectives of RaceDay are to:
+- **Models:** Represent application data and form inputs.
+- **Views:** Render the user interface using Razor.
+- **Controllers:** Handle requests and coordinate application logic.
+- **Services:** Communicate with the RaceDay REST API over HTTP.
+- **Configuration:** Defines application settings, including the API address.
 
-1. Provide a centralised platform for managing road-running, walking and cycling events.
-2. Allow organisers to manage events, categories, participants and results.
-3. Allow participants to discover and enter events.
-4. Provide participants with access to their personal race history and performance information.
-5. Develop the system progressively using an API-driven architecture.
+The MVC application accesses data through the API rather than connecting directly to its database.
 
-## Part 1
+## Prerequisites
 
-Part 1 focuses on planning and establishing the foundation of the RaceDay system.
+- Microsoft Visual Studio with the ASP.NET and web development workload.
+- The .NET SDK version required by the project.
+- The RaceDay REST API and its database configured and running.
 
-The planning documentation includes:
+## Configuration
 
-- System requirements
-- Database design
-- Entity Relationship Diagram (ERD)
-- API endpoint planning
-- Project structure and development planning
+Set the API base URL in `appsettings.json`:
 
-## Documentation
+```json id="4a2f5c"
+{
+  "ApiSettings": {
+    "BaseUrl": "https://localhost:7198/"
+  }
+}
+```
 
-Project planning documentation is stored in the `docs` directory.
+Change the URL if your API uses a different address or port.
 
-### Current Documentation
+## Running the Application
 
-- `API-Endpoint-Plan.md` - planned API endpoints and their functionality.
-- `RaceDay-ERD.png` - Entity Relationship Diagram for the RaceDay database.
+1. Open the RaceDayP3 solution in Visual Studio.
+2. Configure the API base URL.
+3. Start the RaceDay API and confirm it is running.
+4. Set RaceDayP3 as the startup project.
+5. Build the solution and resolve any errors.
+6. Run the MVC application.
+7. Test registration, login, event discovery, and event details.
 
-## Technology
+## Testing Checklist
 
-The project will be developed using technologies and tools appropriate for a full-stack web application and API-driven architecture.
+- [ ] Solution builds successfully.
+- [ ] Home page loads correctly.
+- [ ] Participant registration works.
+- [ ] Login and logout work.
+- [ ] Events load from the API.
+- [ ] Event details display correctly.
+- [ ] Authentication and error handling behave as expected.
 
-Development is being completed using Visual Studio 2022 and GitHub for source control.
+## Security
 
-## Repository Structure
+- Protected API requests use JWT bearer tokens.
+- MVC authentication uses secure cookie configuration.
+- Session cookies are configured as HTTP-only.
+- Password handling is delegated to the API.
+- Secrets and credentials should not be committed to source control.
+- Access permissions must be enforced by the API.
 
-```text
-RaceDayP1/
-│
-├── .github/
-│   └── copilot-instructions.md
-│
-├── docs/
-│   ├── API-Endpoint-Plan.md
-│   └── RaceDay-ERD.png
-│
-└── README.md
+## Submission Evidence
+
+**GitHub repository:** [Insert repository URL]
+
+**Demonstration video:** [Insert unlisted YouTube URL]
+
+**CI/CD evidence:** [Insert the required successful build screenshot]
+
+The demonstration video should explain the application structure, key functionality, API integration, authentication, and design decisions. Use your own voice for the presentation, as required by the assignment.
+
+## Conclusion
+
+RaceDayP3 provides the MVC interface for the RaceDay platform, integrating account access and event discovery with the REST API. Its layered structure separates the user interface, application logic, and API communication.
+
+The final submission should include the verified source code and all documentation, screenshots, video evidence, and additional deliverables specified in the assignment brief.
